@@ -6,41 +6,41 @@ Plateforme RAG multi-utilisateur : chaque utilisateur upload ses documents et di
 
 
 
-\## Stack
+## Stack
 
-\- Backend : FastAPI
+- Backend : FastAPI
 
-\- Auth/Storage/DB : Supabase (PostgreSQL + pgvector)
+- Auth/Storage/DB : Supabase (PostgreSQL + pgvector)
 
-\- LLM : API hébergée (Groq/Together.ai/Fireworks)
+- LLM : API hébergée (Groq/Together.ai/Fireworks)
 
-\- Frontend : Next.js (à confirmer Phase 7)
+- Frontend : Next.js (à confirmer Phase 7)
 
-\## Convention de commits
+## Convention de commits
 
-\- feat: nouvelle fonctionnalité
+- feat: nouvelle fonctionnalité
 
-\- fix: correction de bug
+- fix: correction de bug
 
-\- docs: documentation
+- docs: documentation
 
-\- chore: tâche technique (setup, config)
+- chore: tâche technique (setup, config)
 
-\- refactor: réécriture sans changement de comportement
-
-
-
-\## Stratégie de branches
-
-\- main : version stable
-
-\- dev : branche de développement courant
-
-\- feature/nom-de-la-feature : branches ponctuelles pour une fonctionnalité précise
+- refactor: réécriture sans changement de comportement
 
 
 
-\## Statut
+## Stratégie de branches
+
+- main : version stable
+
+- dev : branche de développement courant
+
+- feature/nom-de-la-feature : branches ponctuelles pour une fonctionnalité précise
+
+
+
+## Statut
 
 🚧 En développement — Phase 0 (environnement + versioning)
 
