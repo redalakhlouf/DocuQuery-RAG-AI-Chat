@@ -311,7 +311,8 @@ Fichier `.env.example` à la racine du projet :
 ```env
 # Supabase
 SUPABASE_URL=
-SUPABASE_KEY=
+SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
 
 # LLM Inference
 LLM_API_KEY=

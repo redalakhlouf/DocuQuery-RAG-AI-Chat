@@ -42,5 +42,5 @@ Plateforme RAG multi-utilisateur : chaque utilisateur upload ses documents et di
 
 ## Statut
 
-🚧 En développement — Phase 0 (environnement + versioning)
+🚧 En développement — Phase 1 terminée (architecture documentée)
 
