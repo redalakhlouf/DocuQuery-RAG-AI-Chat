@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     SUPABASE_ANON_KEY: str
     SUPABASE_SERVICE_ROLE_KEY: str
     LLM_API_KEY: str
+    DATABASE_URL: str
     MAX_FILE_SIZE_MB: int = 5
     ALLOWED_MIME_TYPES: list[str] = ["application/pdf"]
 
