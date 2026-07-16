@@ -6,3 +6,12 @@
 #
 # Protégées par get_current_user + rate limiting (30 questions/jour).
 # Sera implémenté en Phase 6 (retrieval) + Phase 8 (génération).
+from fastapi import APIRouter , Depends
+from app.core.security import get_current_user
+
+router=APIRouter(prefix="/api/v1/chat",tags=["chat"])
+
+@router.post('/query')
+def chat_query(user_id:str=Depends(get_current_user)):
+    return {"user_id":user_id,"message":"Chat a implementer en phase 8"}
+    

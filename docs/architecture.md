@@ -128,6 +128,7 @@ Stocke les métadonnées de chaque PDF uploadé.
 ### Table `chunks`
 
 Stocke les morceaux de texte extraits du PDF et leurs embeddings vectoriels.
+**Objectif transversal** : Chaque chunk doit contenir `page_number` pour permettre la citation de source (Option C).
 
 | Colonne | Type | Contrainte | Rôle |
 |---|---|---|---|
@@ -135,7 +136,7 @@ Stocke les morceaux de texte extraits du PDF et leurs embeddings vectoriels.
 | `document_id` | uuid | NOT NULL, REFERENCES documents(id) ON DELETE CASCADE | Document parent |
 | `content` | text | NOT NULL | Le texte du morceau (~500 mots) |
 | `embedding` | vector(384) | NOT NULL | Vecteur numérique (384 dimensions) |
-| `page_number` | int | NOT NULL | Numéro de page source |
+| `page_number` | int | NOT NULL | Numéro de page source (pour citation) |
 
 ### Table `conversations`
 
