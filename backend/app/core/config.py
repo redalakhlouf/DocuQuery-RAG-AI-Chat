@@ -6,6 +6,8 @@
 # Sera implémenté en Phase 4 avec la classe Settings(BaseSettings).
 
 from pydantic_settings import BaseSettings , SettingsConfigDict
+from pathlib import Path
+
 class Settings(BaseSettings):
     SUPABASE_URL:str
     SUPABASE_ANON_KEY: str
@@ -14,9 +16,8 @@ class Settings(BaseSettings):
     DATABASE_URL: str
     MAX_FILE_SIZE_MB: int = 5
     ALLOWED_MIME_TYPES: list[str] = ["application/pdf"]
+    ALLOWED_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:8000"]
 
-  
-
-    model_config=SettingsConfigDict(env_file=".env")
+    model_config=SettingsConfigDict(env_file=str(Path(__file__).parent.parent.parent / ".env"))
 
 settings=Settings()

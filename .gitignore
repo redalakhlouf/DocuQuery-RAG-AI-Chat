@@ -2,7 +2,16 @@
 .env
 .env.local
 *.env
-
+token_temp.txt
+*.token.txt
+.claude/
+.opencode/
+opencode.json
+NOTES_A_REVOIR.md
+NOTES_A_REVOIR_V2.md
+NOTES_A_REVOIR_V3.md
+TEACHING_MODE.md
+reda_context.md
 
 # Python
 __pycache__/

@@ -23,3 +23,9 @@ def generate_embedding(text: str) -> list[float]:
     model = get_model()
     vector = model.encode(text, normalize_embeddings=True)
     return vector.tolist()
+
+
+def generate_embeddings_batch(texts: list[str]) -> list[list[float]]:
+    model = get_model()
+    vectors = model.encode(texts, normalize_embeddings=True, batch_size=32)
+    return [v.tolist() for v in vectors]

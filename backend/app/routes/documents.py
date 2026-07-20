@@ -6,80 +6,101 @@
 # DELETE /api/v1/documents/{id}     - Supprimer un document
 #
 # Toutes les routes sont protégées par get_current_user (JWT).
-# Sera implémenté en Phase 5 (upload & ingestion).
-from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
+from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, BackgroundTasks
 import uuid
-import magic
+import logging
+try:
+    import magic
+except (ImportError, OSError):
+    magic = None
 from app.core.security import get_current_user
 from app.core.config import settings
-from app.services.document_service import upload_to_supabase, create_document_in_db, extract_text_from_pdf, chunk_text, save_chunks_to_db, update_document_status, get_document_by_id
+from app.services.document_service import (
+    upload_to_supabase, create_document_in_db, extract_text_from_pdf,
+    chunk_text, save_chunks_to_db, update_document_status,
+    get_document_by_id, list_user_documents, sanitize_filename
+)
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/documents", tags=["documents"])
 
 
+def _process_document(document_id: str, user_id: str, contents: bytes):
+    try:
+        full_text, page_map = extract_text_from_pdf(contents)
+        chunks = chunk_text(full_text, page_map)
+        save_chunks_to_db(document_id, chunks)
+        update_document_status(document_id, "ready", user_id)
+        logger.info("Document %s processed successfully (%d chunks)", document_id, len(chunks))
+    except Exception as e:
+        logger.exception("Background processing failed for document %s", document_id)
+        update_document_status(document_id, "error", user_id)
+
+
 @router.get('/')
 def list_documents(user_id: str = Depends(get_current_user)):
-    return {"user_id": user_id, "documents": []}
+    docs = list_user_documents(user_id)
+    return {"user_id": user_id, "documents": docs}
 
 
 @router.post('/upload')
 async def upload_document(
     file: UploadFile = File(...),
-    user_id: str = Depends(get_current_user)
+    user_id: str = Depends(get_current_user),
+    background_tasks: BackgroundTasks = BackgroundTasks()
 ):
-    # 1. Lire le fichier
-    contents = await file.read()
-
-    # 2. Vérifier la taille
-    if len(contents) > settings.MAX_FILE_SIZE_MB * 1024 * 1024:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Fichier trop volumineux (max {settings.MAX_FILE_SIZE_MB} Mo)"
-        )
-
-    # 3. Vérifier le MIME réel
-    mime_type = magic.from_buffer(contents, mime=True)
-    if mime_type not in settings.ALLOWED_MIME_TYPES:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Type de fichier non autorisé : {mime_type}"
-        )
-
-    # 4. Générer un ID unique pour ce document
     document_id = str(uuid.uuid4())
+    try:
+        contents = await file.read()
 
-    # 5. Envoyer le fichier dans Supabase Storage
-    storage_path = upload_to_supabase(user_id, document_id, contents)
+        if len(contents) > settings.MAX_FILE_SIZE_MB * 1024 * 1024:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Fichier trop volumineux (max {settings.MAX_FILE_SIZE_MB} Mo)"
+            )
 
-    # 6. Créer la metadata dans la table documents
-    result = create_document_in_db(
-        document_id=document_id,
-        user_id=user_id,
-        filename=file.filename,
-        storage_path=storage_path
-    )
+        if magic is not None:
+            mime_type = magic.from_buffer(contents, mime=True)
+            if mime_type not in settings.ALLOWED_MIME_TYPES:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Type de fichier non autorisé"
+                )
+        else:
+            if not (file.filename and file.filename.lower().endswith('.pdf')):
+                raise HTTPException(
+                    status_code=400,
+                    detail="Type de fichier non autorisé (pdf uniquement)"
+                )
 
-    # 7. Extraire le texte du PDF
-    full_text, page_map = extract_text_from_pdf(contents)
+        storage_path = upload_to_supabase(user_id, document_id, contents)
 
-    # 8. Découper en chunks
-    chunks = chunk_text(full_text, page_map)
+        safe_filename = sanitize_filename(file.filename or "document.pdf")
+        create_document_in_db(
+            document_id=document_id,
+            user_id=user_id,
+            filename=safe_filename,
+            storage_path=storage_path
+        )
 
-    # 9. Générer les embeddings et sauvegarder dans la DB
-    chunks_saved = save_chunks_to_db(document_id, chunks)
+        background_tasks.add_task(_process_document, document_id, user_id, contents)
 
-    # 10. Mettre à jour le statut : pending → ready
-    update_document_status(document_id, "ready")
+        return {
+            "document_id": document_id,
+            "filename": safe_filename,
+            "status": "processing",
+        }
 
-    # 11. Retourner la confirmation
-    return {
-        "document_id": document_id,
-        "filename": file.filename,
-        "status": "ready",
-        "text_length": len(full_text),
-        "pages_found": len(page_map),
-        "chunks_saved": chunks_saved
-    }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("Upload failed for document %s", document_id)
+        update_document_status(document_id, "error", user_id)
+        raise HTTPException(
+            status_code=500,
+            detail="Erreur lors du traitement du document. Veuillez réessayer."
+        )
 
 
 @router.get('/{document_id}/status')
