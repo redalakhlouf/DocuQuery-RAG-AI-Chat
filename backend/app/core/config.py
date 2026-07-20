@@ -16,7 +16,11 @@ class Settings(BaseSettings):
     DATABASE_URL: str
     MAX_FILE_SIZE_MB: int = 5
     ALLOWED_MIME_TYPES: list[str] = ["application/pdf"]
-    ALLOWED_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:8000"]
+    ALLOWED_ORIGINS: str = "http://localhost:3000,https://docuquery-mu.vercel.app"
+
+    @property
+    def allowed_origins_list(self) -> list[str]:
+        return [o.strip() for o in self.ALLOWED_ORIGINS.split(",") if o.strip()]
 
     model_config=SettingsConfigDict(env_file=str(Path(__file__).parent.parent.parent / ".env"))
 
