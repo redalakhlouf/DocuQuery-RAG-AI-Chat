@@ -14,4 +14,15 @@ router=APIRouter(prefix="/api/v1/chat",tags=["chat"])
 @router.post('/query')
 def chat_query(user_id:str=Depends(get_current_user)):
     return {"user_id":user_id,"message":"Chat a implementer en phase 8"}
-    
+
+@router.get('/conversations')
+def list_conversations(user_id:str=Depends(get_current_user)):
+    return {"conversations": []}
+
+@router.post('/conversations')
+def create_conversation(user_id:str=Depends(get_current_user)):
+    return {"conversation_id":"stub","document_id":None,"message":"Phase 8"}
+
+@router.get('/conversations/{conversation_id}/messages')
+def get_messages(conversation_id:str,user_id:str=Depends(get_current_user)):
+    return {"messages": []}
