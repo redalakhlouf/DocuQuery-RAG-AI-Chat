@@ -1,6 +1,7 @@
 import { createClient } from "@/app/utils/supabase/client";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const _raw = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_BASE = _raw.replace(/^http:\/\//, "https://");
 
 let _onError = null;
 

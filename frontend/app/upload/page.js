@@ -10,7 +10,8 @@ import { getToken } from "@/app/utils/api";
 import { useCallback, useState, useEffect } from "react";
 import { setGridSpeed, boostGrid } from "@/app/components/GridBackground";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const _raw = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_BASE = _raw.replace(/^http:\/\//, "https://");
 
 export default function UploadPage() {
   const { user, loading } = useUser("/login");
