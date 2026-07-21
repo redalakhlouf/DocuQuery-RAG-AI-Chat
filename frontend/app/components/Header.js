@@ -2,7 +2,7 @@
 
 import { createClient } from "@/app/utils/supabase/client";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import ThemeToggle from "./ThemeToggle";
 import LanguageToggle from "./LanguageToggle";
 import { useLanguage } from "@/app/contexts/LanguageContext";
@@ -33,17 +33,8 @@ export default function Header() {
 
   useEffect(() => {
     if (!user) return;
-    const supabase = createClient();
-    supabase
-      .from("profiles")
-      .select("display_name")
-      .eq("id", user.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data && data.display_name) {
-          setDisplayName(data.display_name);
-        }
-      });
+    const name = localStorage.getItem("display_name");
+    if (name) setDisplayName(name);
   }, [user]);
 
   const handleLogout = async () => {

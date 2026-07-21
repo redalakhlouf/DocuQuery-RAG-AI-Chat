@@ -5,12 +5,15 @@
 #
 # Sera implémenté en Phase 4 avec la fonction get_current_user.
 import jwt
+import logging
 from fastapi import HTTPException , status
 from app.core.config import settings
 from jwt import PyJWKClient
 from fastapi import Depends , Header
 
-jwks_client=PyJWKClient("https://qudpglrwsmzpwvhwmosj.supabase.co/auth/v1/.well-known/jwks.json")
+logger = logging.getLogger(__name__)
+
+jwks_client=PyJWKClient(f"{settings.SUPABASE_URL}/auth/v1/.well-known/jwks.json")
 
 def verify_token(token:str) -> str:
     try:
@@ -23,7 +26,7 @@ def verify_token(token:str) -> str:
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="Token expiré")
     except jwt.InvalidTokenError as e :
-        print(f"debug - erreur reele : {e}")
+        logger.error("JWT verification failed: %s", e)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token invalide"

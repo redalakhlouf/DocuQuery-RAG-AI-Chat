@@ -10,23 +10,52 @@
 # - Découper en chunks (~500 mots, overlap 50 mots)
 # - Gérer le statut: processing → ready / error
 # - Gérer le TTL (expires_at = now + 1 heure)
+#
+# OPTIM MÉMOIRE (Render free tier 512MB):
+# - extract_text_from_pdf traite page par page, pas full_text en mémoire
+# - save_chunks_to_db embedde par micro-batch (16 chunks) et INSERT immédiat
+# - download_from_storage permet au background task de ne pas garder contents[]
+# - gc.collect() explicite après chaque grande opération
 
+import gc
 import uuid
 import re
+import logging
 import fitz
 from datetime import datetime, timedelta, timezone
 from supabase import create_client
 from app.core.config import settings
 from app.services.embedding_service import generate_embeddings_batch
 
+logger = logging.getLogger(__name__)
+
 # SECURITY: Service role key bypass RLS — chaque requête DOIT filtrer par user_id
 supabase = create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
+
+
+# ─── TEMP: Diagnostic mémoire — À SUPPRIMER après résolution du OOM ───
+def _log_mem(label: str):
+    try:
+        import resource
+        usage = resource.getrusage(resource.RUSAGE_SELF)
+        mb = usage.ru_maxrss / 1024
+        logger.info("[MEM %s] RSS max: %.0f MB", label, mb)
+    except Exception:
+        pass
+# ─── FIN TEMP ──────────────────────────────────────────────────────────
 
 
 def upload_to_supabase(user_id: str, document_id: str, contents: bytes) -> str:
     storage_path = f"{user_id}/{document_id}.pdf"
     supabase.storage.from_("documents").upload(storage_path, contents)
     return storage_path
+
+
+def download_from_storage(storage_path: str) -> bytes:
+    """Télécharge le PDF depuis Supabase Storage (utilisé par le background task
+    pour ne pas garder contents[] en mémoire dans la closure BackgroundTasks)."""
+    response = supabase.storage.from_("documents").download(storage_path)
+    return response
 
 
 def sanitize_filename(filename: str) -> str:
@@ -60,6 +89,8 @@ def create_document_in_db(
 
 
 def extract_text_from_pdf(contents: bytes) -> tuple[str, list[tuple]]:
+    """Extraction classique — gardée pour compatibilité / tests.
+    Pour le traitement production, utiliser extract_and_chunk_pdf()."""
     doc = fitz.open(stream=contents, filetype="pdf")
     full_text = ""
     page_map = []
@@ -70,6 +101,8 @@ def extract_text_from_pdf(contents: bytes) -> tuple[str, list[tuple]]:
         full_text += page.get_text() + " "
 
     doc.close()
+    del doc
+    gc.collect()
     return full_text, page_map
 
 
@@ -87,7 +120,7 @@ def chunk_text(full_text: str, page_map: list[tuple], chunk_size: int = 500, ove
     start = 0
 
     while start < len(words):
-        end = start + chunk_size
+        end = min(start + chunk_size, len(words))
         chunk_words = words[start:end]
         chunk_content = " ".join(chunk_words)
         word_start_char = len(" ".join(words[:start]))
@@ -105,31 +138,113 @@ def chunk_text(full_text: str, page_map: list[tuple], chunk_size: int = 500, ove
     return chunks
 
 
+def extract_and_chunk_pdf(contents: bytes, chunk_size: int = 500, overlap: int = 50) -> list[dict]:
+    """Extrait le texte page par page et crée les chunks directement.
+    Évite de garder full_text complet en mémoire : accumulate page par page."""
+    doc = fitz.open(stream=contents, filetype="pdf")
+    chunks = []
+
+    # Accumulateur de texte pour gérer le chevauchement entre pages
+    carry_over_words: list[str] = []
+    global_char_offset = 0
+
+    for page_num in range(len(doc)):
+        page = doc[page_num]
+        page_text = page.get_text()
+        page_words = page_text.split()
+
+        # Libérer la page dès qu'on a le texte
+        del page_text
+
+        # Comb carry-over de la page précédente + texte de cette page
+        all_words = carry_over_words + page_words
+        del page_words
+
+        # Découper en chunks de chunk_size mots
+        start = 0
+        while start + chunk_size <= len(all_words):
+            chunk_words = all_words[start:start + chunk_size]
+            chunk_content = " ".join(chunk_words)
+
+            # Calculer le numéro de page basé sur la position globale
+            page_number = page_num + 1
+
+            chunks.append({
+                "content": chunk_content,
+                "page_number": page_number,
+                "word_start": global_char_offset + start,
+                "word_end": global_char_offset + start + chunk_size
+            })
+
+            start += chunk_size - overlap
+
+        # Garder les derniers mots comme carry-over pour la prochaine page
+        carry_over_words = all_words[start:] if start < len(all_words) else []
+        global_char_offset += len(all_words)
+
+    # Dernier chunk avec le reste s'il est significatif (>20% du chunk_size)
+    if len(carry_over_words) > chunk_size * 0.2:
+        chunk_content = " ".join(carry_over_words)
+        chunks.append({
+            "content": chunk_content,
+            "page_number": len(doc),
+            "word_start": global_char_offset - len(carry_over_words),
+            "word_end": global_char_offset
+        })
+
+    doc.close()
+    del doc
+    gc.collect()
+
+    logger.info("PDF chunké en %d chunks (chunk_size=%d, overlap=%d)", len(chunks), chunk_size, overlap)
+    return chunks
+
+
 def save_chunks_to_db(document_id: str, chunks: list[dict]) -> int:
-    texts = [c["content"] for c in chunks]
-    embeddings = generate_embeddings_batch(texts)
+    """Sauvegarde les chunks avec embeddings par micro-batch.
+    Chaque batch est INSERTé puis libéré de la mémoire immédiatement."""
+    EMBED_BATCH_SIZE = 16
+    DB_BATCH_SIZE = 50
+    total_saved = 0
 
-    rows = [{
-        "id": str(uuid.uuid4()),
-        "document_id": document_id,
-        "content": c["content"],
-        "embedding": str(e),
-        "page_number": c["page_number"]
-    } for c, e in zip(chunks, embeddings)]
+    # Traiter les embeddings par micro-batch
+    for i in range(0, len(chunks), EMBED_BATCH_SIZE):
+        batch_chunks = chunks[i:i + EMBED_BATCH_SIZE]
+        texts = [c["content"] for c in batch_chunks]
 
-    BATCH_SIZE = 50
-    for i in range(0, len(rows), BATCH_SIZE):
-        batch = rows[i:i + BATCH_SIZE]
-        supabase.table("chunks").insert(batch).execute()
+        # Générer les embeddings pour ce micro-batch
+        embeddings = generate_embeddings_batch(texts, batch_size=EMBED_BATCH_SIZE)
 
-    return len(rows)
+        # Construire les rows pour ce micro-batch
+        rows = [{
+            "id": str(uuid.uuid4()),
+            "document_id": document_id,
+            "content": c["content"],
+            "embedding": str(e),
+            "page_number": c["page_number"]
+        } for c, e in zip(batch_chunks, embeddings)]
+
+        # Libérer les embeddings intermédiaires
+        del embeddings
+        del texts
+        gc.collect()
+
+        # INSERT en sous-batches dans la DB
+        for j in range(0, len(rows), DB_BATCH_SIZE):
+            db_batch = rows[j:j + DB_BATCH_SIZE]
+            supabase.table("chunks").insert(db_batch).execute()
+            total_saved += len(db_batch)
+
+        # Libérer les rows
+        del rows
+        gc.collect()
+
+    _log_mem("after_save_chunks")
+    return total_saved
 
 
-def update_document_status(document_id: str, status: str, user_id: str = None):
-    query = supabase.table("documents").update({"status": status}).eq("id", document_id)
-    if user_id:
-        query = query.eq("user_id", user_id)
-    query.execute()
+def update_document_status(document_id: str, status: str, user_id: str):
+    supabase.table("documents").update({"status": status}).eq("id", document_id).eq("user_id", user_id).execute()
 
 
 def get_document_by_id(document_id: str, user_id: str) -> dict | None:

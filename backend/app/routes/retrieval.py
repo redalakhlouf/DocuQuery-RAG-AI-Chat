@@ -1,9 +1,12 @@
+import logging
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app.services.retrieval_service import RetrievalService
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/retrieval", tags=["retrieval"])
 
@@ -54,7 +57,8 @@ async def search_chunks(
             question=request.question
         )
     except Exception as e:
+        logger.exception("Retrieval search failed")
         raise HTTPException(
             status_code=500,
-            detail=f"Erreur lors de la recherche: {str(e)}"
+            detail="Erreur lors de la recherche. Veuillez réessayer."
         )
