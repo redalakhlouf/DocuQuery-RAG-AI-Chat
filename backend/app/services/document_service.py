@@ -11,7 +11,7 @@
 # - Gérer le statut: processing → ready / error
 # - Gérer le TTL (expires_at = now + 1 heure)
 #
-# OPTIM MÉMOIRE (Render free tier 512MB):
+# OPTIM MÉMOIRE:
 # - extract_text_from_pdf traite page par page, pas full_text en mémoire
 # - save_chunks_to_db embedde par micro-batch (16 chunks) et INSERT immédiat
 # - download_from_storage permet au background task de ne pas garder contents[]
@@ -31,18 +31,6 @@ logger = logging.getLogger(__name__)
 
 # SECURITY: Service role key bypass RLS — chaque requête DOIT filtrer par user_id
 supabase = create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
-
-
-# ─── TEMP: Diagnostic mémoire — À SUPPRIMER après résolution du OOM ───
-def _log_mem(label: str):
-    try:
-        import resource
-        usage = resource.getrusage(resource.RUSAGE_SELF)
-        mb = usage.ru_maxrss / 1024
-        logger.info("[MEM %s] RSS max: %.0f MB", label, mb)
-    except Exception:
-        pass
-# ─── FIN TEMP ──────────────────────────────────────────────────────────
 
 
 def upload_to_supabase(user_id: str, document_id: str, contents: bytes) -> str:
@@ -239,7 +227,6 @@ def save_chunks_to_db(document_id: str, chunks: list[dict]) -> int:
         del rows
         gc.collect()
 
-    _log_mem("after_save_chunks")
     return total_saved
 
 

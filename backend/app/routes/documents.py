@@ -6,7 +6,7 @@
 #
 # Toutes les routes sont protégées par get_current_user (JWT).
 #
-# OPTIM MÉMOIRE (Render free tier 512MB):
+# OPTIM MÉMOIRE:
 # - contents[] n'est PAS passé au BackgroundTask (évite la closure en RAM)
 # - Le background task télécharge le PDF depuis Supabase Storage
 # - extract_and_chunk_pdf traite page par page
@@ -35,15 +35,6 @@ router = APIRouter(prefix="/api/v1/documents", tags=["documents"])
 def _process_document(document_id: str, user_id: str, storage_path: str):
     """Background task: télécharge le PDF depuis Storage, traite, et nettoie.
     Ne reçoit PAS contents[] en paramètre pour éviter de garder le binaire en RAM."""
-    # ─── TEMP: Diagnostic mémoire — À SUPPRIMER après résolution du OOM ───
-    try:
-        import resource
-        mb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024
-        logger.info("[MEM _process START] RSS: %.0f MB", mb)
-    except Exception:
-        pass
-    # ─── FIN TEMP ──────────────────────────────────────────────────────
-
     try:
         # Télécharger le PDF depuis Supabase Storage (au lieu de le garder en closure)
         from app.services.document_service import download_from_storage

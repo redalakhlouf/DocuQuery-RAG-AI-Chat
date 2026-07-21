@@ -2,8 +2,7 @@
 #
 # Fonction principale: valider le token, extraire le user_id
 # Utilisé comme dependency FastAPI pour protéger les routes
-#
-# Sera implémenté en Phase 4 avec la fonction get_current_user.
+import time
 import jwt
 import logging
 from fastapi import HTTPException , status
@@ -13,9 +12,24 @@ from fastapi import Depends , Header
 
 logger = logging.getLogger(__name__)
 
-jwks_client=PyJWKClient(f"{settings.SUPABASE_URL}/auth/v1/.well-known/jwks.json")
+_jwks_url = f"{settings.SUPABASE_URL}/auth/v1/.well-known/jwks.json"
+jwks_client = None
+
+for _attempt in range(1, 4):
+    try:
+        jwks_client = PyJWKClient(_jwks_url)
+        break
+    except Exception as exc:
+        logger.warning("JWKS client init attempt %d/3 failed: %s", _attempt, exc)
+        if _attempt < 3:
+            time.sleep(_attempt * 2)
+
+if jwks_client is None:
+    logger.critical("Impossible d'initialiser le JWKS client après 3 tentatives.")
 
 def verify_token(token:str) -> str:
+    if jwks_client is None:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Service d'authentification indisponible")
     try:
         signing_key=jwks_client.get_signing_key_from_jwt(token)
         payload=jwt.decode(token ,signing_key.key , algorithms=["ES256"] , audience="authenticated",)

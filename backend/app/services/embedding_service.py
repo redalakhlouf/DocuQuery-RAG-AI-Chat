@@ -7,11 +7,10 @@
 # Note: le modèle tourne sur le backend (pas d'API externe).
 # ~300 MB RAM utilisés.
 #
-# OPTIM: Lazy loading singleton thread-safe — le modèle n'est chargé qu'à
-# la première utilisation réelle, pas au démarrage du serveur.
-# Ceci réduit la RAM idle de ~300 MB.
+# Le modèle est chargé au démarrage du serveur (via load_model() appelé
+# dans le lifespan FastAPI) pour que le readiness probe Azure n'arrive
+# pas avant que le modèle soit prêt. Le singleton est conservé.
 
-import gc
 import logging
 import threading
 
@@ -23,15 +22,21 @@ _model: SentenceTransformer | None = None
 _model_lock = threading.Lock()
 
 
-def get_model() -> SentenceTransformer:
-    """Retourne l'instance singleton du modèle, chargée à la première utilisation."""
+def load_model() -> None:
+    """Charge le modèle au démarrage du serveur. Thread-safe, idempotent."""
     global _model
     if _model is None:
         with _model_lock:
             if _model is None:
-                logger.info("Chargement du modèle d'embeddings (première requête)...")
+                logger.info("Chargement du modèle d'embeddings...")
                 _model = SentenceTransformer("intfloat/multilingual-e5-small")
-                logger.info("Modèle chargé.")
+                logger.info("Modèle d'embeddings chargé avec succès.")
+
+
+def get_model() -> SentenceTransformer:
+    """Retourne l'instance singleton. Charge si pas encore chargé (safety net)."""
+    if _model is None:
+        load_model()
     return _model
 
 
