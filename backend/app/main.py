@@ -40,7 +40,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         return response
 
 
-app = FastAPI(title="DocuQuery API", lifespan=lifespan)
+app = FastAPI(title="DocuQuery API", lifespan=lifespan, redirect_slashes=False)
 
 app.add_middleware(SecurityHeadersMiddleware)
 

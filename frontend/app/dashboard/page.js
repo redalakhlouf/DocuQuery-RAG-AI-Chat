@@ -116,7 +116,7 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!user) return;
 
-    apiGet("/api/v1/documents")
+    apiGet("/api/v1/documents/")
       .then((data) => setDocuments(data.documents || []))
       .catch(() => addToast(t("dashboard.loadingError"), "error"))
       .finally(() => setLoadingDocs(false));

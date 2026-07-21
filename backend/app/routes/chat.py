@@ -15,7 +15,7 @@ router=APIRouter(prefix="/api/v1/chat",tags=["chat"])
 def chat_query(user_id:str=Depends(get_current_user)):
     return {"user_id":user_id,"message":"Chat a implementer en phase 8"}
 
-@router.get('/conversations')
+@router.get('/conversations/')
 def list_conversations(user_id:str=Depends(get_current_user)):
     return {"conversations": []}
 

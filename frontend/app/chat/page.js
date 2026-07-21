@@ -27,11 +27,11 @@ export default function ChatPage() {
   useEffect(() => {
     if (!user) return;
 
-    apiGet("/api/v1/documents")
+    apiGet("/api/v1/documents/")
       .then((data) => setDocuments(data.documents || []))
       .catch(() => addToast("Erreur de chargement des documents", "error"));
 
-    apiGet("/api/v1/chat/conversations")
+    apiGet("/api/v1/chat/conversations/")
       .then((data) => setConversations(data.conversations || []))
       .catch(() => addToast("Erreur de chargement des conversations", "error"));
   }, [user]);

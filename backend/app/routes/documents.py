@@ -61,7 +61,7 @@ def _process_document(document_id: str, user_id: str, storage_path: str):
         update_document_status(document_id, "error", user_id)
 
 
-@router.get('')
+@router.get('/')
 def list_documents(user_id: str = Depends(get_current_user)):
     docs = list_user_documents(user_id)
     return {"user_id": user_id, "documents": docs}
