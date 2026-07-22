@@ -1,10 +1,34 @@
-# DocuQuery
+<p align="center">
+  <img src="DocuQuery.png" alt="DocuQuery" width="600">
+</p>
 
-![DocuQuery](DocuQuery.png)
+<h1 align="center">DocuQuery</h1>
 
-> Chat with your documents. Upload a PDF, ask questions, get answers with page citations.
+<p align="center">
+  <em>Chat with your documents. Upload a PDF, ask questions, get answers with page citations.</em>
+</p>
 
-**Live demo:** [docuquery.dev](https://docuquery.dev)
+<p align="center">
+  <a href="https://docuquery.dev"><img src="https://img.shields.io/badge/Live_Demo-docuquery.dev-00C853?style=for-the-badge&logo=vercel&logoColor=white" alt="Live Demo"></a>
+  <a href="https://github.com/redalakhlouf/RAG_PROJET"><img src="https://img.shields.io/badge/Source_Code-GitHub-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub"></a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white" alt="Next.js">
+  <img src="https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI">
+  <img src="https://img.shields.io/badge/Supabase-3FCF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase">
+  <img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL">
+  <img src="https://img.shields.io/badge/Groq-FF6B00?style=for-the-badge&logoColor=white" alt="Groq">
+  <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker">
+  <img src="https://img.shields.io/badge/Azure-0078D4?style=for-the-badge&logo=microsoftazure&logoColor=white" alt="Azure">
+  <img src="https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Vercel">
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" alt="License">
+  <img src="https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python">
+  <img src="https://img.shields.io/badge/TypeScript-5.0+-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript">
+</p>
 
 ---
 

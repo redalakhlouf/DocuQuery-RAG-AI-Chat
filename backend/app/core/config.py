@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     LLM_API_KEY: str = ""
     LLM_API_KEYS: str = ""
     DATABASE_URL: str
-    MAX_FILE_SIZE_MB: int = 5
+    MAX_FILE_SIZE_MB: int = 10
     ALLOWED_MIME_TYPES: list[str] = ["application/pdf"]
     ALLOWED_ORIGINS: str = "http://localhost:3000,https://docuquery-mu.vercel.app"
 
