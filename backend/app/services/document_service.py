@@ -268,3 +268,24 @@ def count_user_documents(user_id: str) -> int:
         .execute()
     )
     return result.count or 0
+
+
+def delete_document(user_id: str, document_id: str) -> bool:
+    doc = get_document_by_id(document_id)
+    if not doc or doc["user_id"] != user_id:
+        return False
+
+    # 1. Supprimer les chunks de la table document_chunks
+    supabase.table("document_chunks").delete().eq("document_id", document_id).execute()
+
+    # 2. Supprimer le fichier du Storage
+    if doc.get("storage_path"):
+        try:
+            supabase.storage.from_("documents").remove([doc["storage_path"]])
+        except Exception:
+            pass
+
+    # 3. Supprimer le document de la table documents
+    supabase.table("documents").delete().eq("id", document_id).execute()
+
+    return True

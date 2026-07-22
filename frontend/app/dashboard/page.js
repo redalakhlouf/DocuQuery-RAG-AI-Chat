@@ -1,7 +1,7 @@
 "use client";
 
 import { useUser } from "@/app/hooks/useUser";
-import { apiGet } from "@/app/utils/api";
+import { apiGet, apiDelete } from "@/app/utils/api";
 import Badge from "@/app/components/Badge";
 import Skeleton from "@/app/components/Skeleton";
 import EmptyState from "@/app/components/EmptyState";
@@ -136,6 +136,17 @@ export default function DashboardPage() {
       }
     }
   }, [user]);
+
+  const handleDelete = async (docId, filename) => {
+    if (!confirm(`Supprimer le document "${filename}" ? Cette action est irreversible.`)) return;
+    try {
+      await apiDelete(`/api/v1/documents/${docId}`);
+      setDocuments((prev) => prev.filter((d) => d.id !== docId));
+      addToast("Document supprimé", "success");
+    } catch (err) {
+      addToast(err.message, "error");
+    }
+  };
 
   if (loading) return null;
 
@@ -286,7 +297,17 @@ export default function DashboardPage() {
                           </p>
                         </div>
                       </div>
-                      <Badge status={doc.status} />
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <Badge status={doc.status} />
+                        <button
+                          onClick={() => handleDelete(doc.id, doc.filename)}
+                          className="text-dq-text-muted hover:text-dq-error transition-colors p-1 rounded"
+                          title="Supprimer"
+                          aria-label={`Supprimer ${doc.filename}`}
+                        >
+                          ✕
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>

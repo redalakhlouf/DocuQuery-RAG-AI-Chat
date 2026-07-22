@@ -157,13 +157,13 @@ La route `POST /upload` n'effectue aucun COUNT avant d'accepter l'upload. La lim
 - `backend/app/routes/documents.py:70-133` — pas de COUNT pre-upload
 - `frontend/app/upload/page.js` — pas de limite affichee
 
-### Solution
-**Backend :** Avant l'INSERT, compter les documents existants de l'utilisateur. Si >= 5, rejeter avec 400/403 et un message clair.
+### Solution appliquee
+**Backend :** Verification COUNT dans `documents.py` avant l'upload. Nouvelle fonction `count_user_documents()` dans `document_service.py`.
 
-**Frontend :** Afficher le nombre de documents / 5, griser le DropZone quand la limite est atteinte.
+**Frontend :** Dashboard : compteur X/5 + lien "Nouveau document" desactive. Upload : DropZone desactivee + message d'erreur.
 
 ### Statut
-**A resoudre.**
+**RESOLU** (2026-07-22) — backend redeploye, frontend pousse.
 
 ---
 
@@ -255,6 +255,6 @@ Empeche l'appel API si la valeur est vide.
 | 2 | Rate limit Groq (429) | Moyen | Resolu |
 | 3 | Domaine custom (CORS + DNS) | Moyen | Resolu |
 | 4 | Doublons d'upload | Moyen | Resolu |
-| 5 | Pas de limite 5 fichiers | Moyen | A resoudre |
+| 5 | Pas de limite 5 fichiers | Moyen | Resolu |
 | 6 | Pas de suppression de fichier | Moyen | A resoudre |
 | 7 | Document ID vide envoye par le frontend | Moyen | Resolu |

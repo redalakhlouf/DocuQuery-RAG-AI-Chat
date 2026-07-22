@@ -67,3 +67,9 @@ export async function apiPost(path, body) {
   if (!res.ok) throw new Error(`POST ${path} failed: ${res.status}`);
   return res.json();
 }
+
+export async function apiDelete(path) {
+  const res = await apiFetch(path, { method: "DELETE" });
+  if (!res.ok) throw new Error(`DELETE ${path} failed: ${res.status}`);
+  return res.json();
+}

@@ -25,7 +25,7 @@ from app.services.document_service import (
     upload_to_supabase, create_document_in_db, extract_and_chunk_pdf,
     save_chunks_to_db, update_document_status,
     get_document_by_id, list_user_documents, sanitize_filename,
-    find_duplicate_document, count_user_documents
+    find_duplicate_document, count_user_documents, delete_document
 )
 
 logger = logging.getLogger(__name__)
@@ -165,3 +165,14 @@ def get_document_status(
         "filename": document["filename"],
         "created_at": document["created_at"]
     }
+
+
+@router.delete('/{document_id}')
+def delete_document_endpoint(
+    document_id: str,
+    user_id: str = Depends(get_current_user)
+):
+    success = delete_document(user_id, document_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Document non trouvé")
+    return {"message": "Document supprimé avec succès"}
