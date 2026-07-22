@@ -122,13 +122,20 @@ Aucune verification de doublon dans le code d'upload. Chaque upload cree un nouv
 - `backend/app/routes/documents.py:70-133` — pas de check pre-upload
 - `frontend/app/upload/page.js:43-108` — pas de protection double-clic
 
-### Solution
-**Backend :** Avant l'INSERT, verifier si un document avec le meme `filename` existe deja pour cet `user_id`. Si oui, soit rejeter (409 Conflict), soit mettre a jour l'existant.
+### Solution appliquee
+**Backend :** Ajout d'une verification pre-upload dans `documents.py` :
+```python
+safe_filename = sanitize_filename(file.filename or "document.pdf")
+existing = find_duplicate_document(user_id, safe_filename)
+if existing:
+    raise HTTPException(status_code=409, detail=f'Un document "{safe_filename}" existe deja...')
+```
+Nouvelle fonction `find_duplicate_document()` dans `document_service.py` qui interroge la table `documents` pour un meme `filename` + `user_id` avec `status = 'ready'`.
 
-**Frontend :** Desactiver le bouton "Uploader" pendant l'envoi, ou afficher un warning de doublon.
+**Frontend :** Pas de changement — le backend rejette avec 409 et le frontend affiche deja le message d'erreur.
 
 ### Statut
-**A resoudre.**
+**RESOLU** (2026-07-22) — backend redeploye.
 
 ---
 
@@ -219,13 +226,24 @@ Le backend ne valide pas que `document_id` est un UUID valide avant de lancer la
 - `frontend/app/chat/page.js:43-81` — `handleSelectDocument` envoie le document_id sans validation
 - `backend/app/routes/chat.py` — pas de validation du format UUID dans `CreateConversationRequest`
 
-### Solution
-**Backend :** Valider que `document_id` est un UUID valide avant la requete SQL. Si vide ou invalide, retourner 400.
+### Solution appliquee
+**Backend :** Ajout de la validation UUID au debut de `create_conversation` :
+```python
+try:
+    uuid_lib.UUID(body.document_id)
+except ValueError:
+    raise HTTPException(status_code=400, detail="document_id invalide")
+```
+Rejette les document_id vides ou malformes avant toute requete SQL.
 
-**Frontend :** Ne pas appeler `handleSelectDocument` si la valeur est vide.
+**Frontend :** Ajout d'une garde au debut de `handleSelectDocument` :
+```javascript
+if (!docId) return;
+```
+Empeche l'appel API si la valeur est vide.
 
 ### Statut
-**A resoudre.**
+**RESOLU** (2026-07-22) — backend redeploye, frontend pousse sur Vercel.
 
 ---
 
@@ -236,7 +254,7 @@ Le backend ne valide pas que `document_id` est un UUID valide avant de lancer la
 | 1 | PgBouncer vs asyncpg (routes chat en 500) | Critique | Resolu |
 | 2 | Rate limit Groq (429) | Moyen | Resolu |
 | 3 | Domaine custom (CORS + DNS) | Moyen | Resolu |
-| 4 | Doublons d'upload | Moyen | A resoudre |
+| 4 | Doublons d'upload | Moyen | Resolu |
 | 5 | Pas de limite 5 fichiers | Moyen | A resoudre |
 | 6 | Pas de suppression de fichier | Moyen | A resoudre |
-| 7 | Document ID vide envoye par le frontend | Moyen | A resoudre |
+| 7 | Document ID vide envoye par le frontend | Moyen | Resolu |

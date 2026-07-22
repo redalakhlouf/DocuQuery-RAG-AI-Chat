@@ -23,6 +23,8 @@ export default function UploadPage() {
   const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);
   const [uploadedDocId, setUploadedDocId] = useState(null);
+  const [docCount, setDocCount] = useState(null);
+  const limitReached = docCount !== null && docCount >= 5;
 
   // Grid speed follows upload progress
   useEffect(() => {
@@ -33,6 +35,19 @@ export default function UploadPage() {
     const speed = 1 - (progress / 100) * 0.7;
     setGridSpeed(Math.max(0.3, speed));
   }, [progress, uploading]);
+
+  // Fetch document count to enforce 5-file limit
+  useEffect(() => {
+    if (!user) return;
+    user.getIdToken().then((token) => {
+      fetch(`${API_BASE}/api/v1/documents/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((r) => r.json())
+        .then((data) => setDocCount((data.documents || []).length))
+        .catch(() => {});
+    });
+  }, [user]);
 
   const handleFileSelect = useCallback((file) => {
     setSelectedFile(file);
@@ -125,7 +140,13 @@ export default function UploadPage() {
           Uploader un document
         </h1>
 
-        <DropZone onFileSelect={handleFileSelect} disabled={uploading} />
+        <DropZone onFileSelect={handleFileSelect} disabled={uploading || limitReached} />
+
+        {limitReached && !uploading && (
+          <div className="mt-4 p-3 rounded bg-dq-error/10 border border-dq-error/30 text-sm text-dq-error">
+            Limite atteinte : maximum 5 documents par compte. Supprimez un document existant avant d'en ajouter un nouveau.
+          </div>
+        )}
 
         {selectedFile && !uploading && (
           <div className="mt-4 p-3 rounded bg-dq-bg border border-dq-border flex items-center justify-between">

@@ -244,3 +244,27 @@ def get_document_by_id(document_id: str, user_id: str) -> dict | None:
 def list_user_documents(user_id: str) -> list[dict]:
     result = supabase.table("documents").select("*").eq("user_id", user_id).order("created_at", desc=True).execute()
     return result.data if result.data else []
+
+
+def find_duplicate_document(user_id: str, filename: str) -> dict | None:
+    result = (
+        supabase.table("documents")
+        .select("*")
+        .eq("user_id", user_id)
+        .eq("filename", filename)
+        .eq("status", "ready")
+        .execute()
+    )
+    if result.data:
+        return result.data[0]
+    return None
+
+
+def count_user_documents(user_id: str) -> int:
+    result = (
+        supabase.table("documents")
+        .select("id", count="exact")
+        .eq("user_id", user_id)
+        .execute()
+    )
+    return result.count or 0

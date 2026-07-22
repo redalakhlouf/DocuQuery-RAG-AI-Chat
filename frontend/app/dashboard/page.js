@@ -67,10 +67,10 @@ function AnimatedNumber({ value }) {
   return <span className="count-up">{display}</span>;
 }
 
-function DocCounter({ count }) {
+function DocCounter({ count, max = 5 }) {
   const radius = 28;
   const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (Math.min(count, 20) / 20) * circumference;
+  const offset = circumference - (Math.min(count, max) / max) * circumference;
 
   return (
     <div className="relative w-20 h-20 mx-auto">
@@ -97,7 +97,7 @@ function DocCounter({ count }) {
         />
       </svg>
       <span className="absolute inset-0 flex items-center justify-center font-display text-xl font-bold text-dq-text">
-        {count}
+        {count}<span className="text-sm text-dq-text-muted">/{max}</span>
       </span>
     </div>
   );
@@ -182,18 +182,28 @@ export default function DashboardPage() {
 
             {/* Quick actions */}
             <div className="bg-dq-surface/80 backdrop-blur-sm rounded-xl border border-dq-border p-5 space-y-3">
-              <a
-                href="/upload"
-                className="flex items-center gap-3 p-3 rounded-lg bg-dq-accent/10 border border-dq-accent/20 hover:bg-dq-accent/20 transition-all no-underline group"
-              >
-                <span className="text-dq-accent text-lg font-bold leading-none">
-                  +
-                </span>
-                <div>
-                  <p className="text-sm font-medium text-dq-text">{t("dashboard.newDoc")}</p>
-                  <p className="text-xs text-dq-text-muted">{t("dashboard.newDocDesc")}</p>
+              {totalCount >= 5 ? (
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-dq-text-muted/5 border border-dq-border/50 opacity-60 cursor-not-allowed">
+                  <span className="text-dq-text-muted text-lg font-bold leading-none">+</span>
+                  <div>
+                    <p className="text-sm font-medium text-dq-text-muted">{t("dashboard.newDoc")}</p>
+                    <p className="text-xs text-dq-text-muted">Limite de 5 documents atteinte</p>
+                  </div>
                 </div>
-              </a>
+              ) : (
+                <a
+                  href="/upload"
+                  className="flex items-center gap-3 p-3 rounded-lg bg-dq-accent/10 border border-dq-accent/20 hover:bg-dq-accent/20 transition-all no-underline group"
+                >
+                  <span className="text-dq-accent text-lg font-bold leading-none">
+                    +
+                  </span>
+                  <div>
+                    <p className="text-sm font-medium text-dq-text">{t("dashboard.newDoc")}</p>
+                    <p className="text-xs text-dq-text-muted">{t("dashboard.newDocDesc")}</p>
+                  </div>
+                </a>
+              )}
 
               <a
                 href="/chat"
@@ -226,7 +236,7 @@ export default function DashboardPage() {
             <div className="bg-dq-surface/80 backdrop-blur-sm rounded-xl border border-dq-border p-5 text-center">
               <DocCounter count={totalCount} />
               <p className="text-xs text-dq-text-muted font-mono mt-3">
-                <AnimatedNumber value={totalCount} /> document{totalCount !== 1 ? "s" : ""} indexé{totalCount !== 1 ? "s" : ""}
+                <AnimatedNumber value={totalCount} /> / 5 document{totalCount !== 1 ? "s" : ""} indexé{totalCount !== 1 ? "s" : ""}
               </p>
             </div>
           </aside>

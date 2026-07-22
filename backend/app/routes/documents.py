@@ -24,7 +24,8 @@ from app.core.config import settings
 from app.services.document_service import (
     upload_to_supabase, create_document_in_db, extract_and_chunk_pdf,
     save_chunks_to_db, update_document_status,
-    get_document_by_id, list_user_documents, sanitize_filename
+    get_document_by_id, list_user_documents, sanitize_filename,
+    find_duplicate_document, count_user_documents
 )
 
 logger = logging.getLogger(__name__)
@@ -97,9 +98,26 @@ async def upload_document(
                     detail="Type de fichier non autorisé (pdf uniquement)"
                 )
 
+        safe_filename = sanitize_filename(file.filename or "document.pdf")
+
+        # Limite de 5 documents par utilisateur
+        doc_count = count_user_documents(user_id)
+        if doc_count >= 5:
+            raise HTTPException(
+                status_code=400,
+                detail="Limite atteinte : maximum 5 documents par compte. Supprimez un document existant avant d'en ajouter un nouveau."
+            )
+
+        # Verifier les doublons : si un document avec le meme nom est deja traite
+        existing = find_duplicate_document(user_id, safe_filename)
+        if existing:
+            raise HTTPException(
+                status_code=409,
+                detail=f'Un document "{safe_filename}" existe deja. Supprimez-le d\'abord pour en uploader un nouveau.'
+            )
+
         storage_path = upload_to_supabase(user_id, document_id, contents)
 
-        safe_filename = sanitize_filename(file.filename or "document.pdf")
         create_document_in_db(
             document_id=document_id,
             user_id=user_id,
