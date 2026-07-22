@@ -41,6 +41,7 @@ export default function ChatPage() {
   }, [messages, scrollToBottom]);
 
   const handleSelectDocument = async (docId) => {
+    if (!docId) return;
     setSelectedDoc(docId);
     setMessages([]);
     setActiveConv(null);

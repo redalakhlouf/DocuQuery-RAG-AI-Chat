@@ -9,6 +9,7 @@
 # Rate limiting: 30 questions/jour/utilisateur (table usage).
 
 import logging
+import uuid as uuid_lib
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -129,6 +130,12 @@ async def create_conversation(
     db: AsyncSession = Depends(get_db),
 ):
     try:
+        # Valider que document_id est un UUID valide
+        try:
+            uuid_lib.UUID(body.document_id)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="document_id invalide")
+
         await _verify_document_ownership(db, body.document_id, user_id)
 
         now = datetime.now(timezone.utc)

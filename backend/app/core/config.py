@@ -5,7 +5,8 @@ class Settings(BaseSettings):
     SUPABASE_URL:str
     SUPABASE_ANON_KEY: str
     SUPABASE_SERVICE_ROLE_KEY: str
-    LLM_API_KEY: str
+    LLM_API_KEY: str = ""
+    LLM_API_KEYS: str = ""
     DATABASE_URL: str
     MAX_FILE_SIZE_MB: int = 5
     ALLOWED_MIME_TYPES: list[str] = ["application/pdf"]
@@ -14,6 +15,13 @@ class Settings(BaseSettings):
     @property
     def allowed_origins_list(self) -> list[str]:
         return [o.strip() for o in self.ALLOWED_ORIGINS.split(",") if o.strip()]
+
+    @property
+    def llm_api_keys(self) -> list[str]:
+        keys = [k.strip() for k in self.LLM_API_KEYS.split(",") if k.strip()]
+        if not keys and self.LLM_API_KEY:
+            keys = [self.LLM_API_KEY]
+        return keys
 
     model_config=SettingsConfigDict(env_file=str(Path(__file__).parent.parent.parent / ".env"))
 
