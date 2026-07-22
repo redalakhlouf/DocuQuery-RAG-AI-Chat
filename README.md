@@ -45,6 +45,15 @@ DocuQuery is a multi-user RAG (Retrieval-Augmented Generation) SaaS platform. Ea
 
 ---
 
+## Demo
+
+| File | Description |
+|------|-------------|
+| [`demo/docuquery.demo.mp4`](demo/docuquery.demo.mp4) | Video walkthrough of DocuQuery |
+| [`demo/herman-melville-moby-dick.pdf`](demo/herman-melville-moby-dick.pdf) | Sample PDF for testing (Moby Dick, 1.47 MB) |
+
+---
+
 ## Architecture
 
 ```
