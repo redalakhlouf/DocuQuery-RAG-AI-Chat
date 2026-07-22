@@ -26,6 +26,7 @@ DESIGN_AUDIT.md
 .opencode/
 opencode.json
 cleanup_archive/
+INTERVIEW_PREP.md
 
 # Python
 __pycache__/
