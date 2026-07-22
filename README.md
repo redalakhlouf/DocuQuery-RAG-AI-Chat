@@ -31,8 +31,11 @@
 </p>
 
 <p align="center">
-  <video src="demo/docuquery.demo.mp4" controls width="700" poster="DocuQuery.png"></video>
+  <a href="demo/docuquery.demo.mp4">
+    <img src="DocuQuery.png" alt="DocuQuery Demo — Click to watch" width="700">
+  </a>
 </p>
+<p align="center"><em>👆 Click the image to watch the demo video</em></p>
 
 ---
 
