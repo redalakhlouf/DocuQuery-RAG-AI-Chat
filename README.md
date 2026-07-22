@@ -30,6 +30,10 @@
   <img src="https://img.shields.io/badge/TypeScript-5.0+-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript">
 </p>
 
+<p align="center">
+  <video src="demo/docuquery.demo.mp4" controls width="700" poster="DocuQuery.png"></video>
+</p>
+
 ---
 
 ## What is DocuQuery?
