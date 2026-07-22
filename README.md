@@ -1,5 +1,7 @@
 # DocuQuery
 
+![DocuQuery](DocuQuery.png)
+
 > Chat with your documents. Upload a PDF, ask questions, get answers with page citations.
 
 **Live demo:** [docuquery.dev](https://docuquery.dev)
