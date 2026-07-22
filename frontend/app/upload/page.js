@@ -39,7 +39,8 @@ export default function UploadPage() {
   // Fetch document count to enforce 5-file limit
   useEffect(() => {
     if (!user) return;
-    user.getIdToken().then((token) => {
+    getToken().then((token) => {
+      if (!token) return;
       fetch(`${API_BASE}/api/v1/documents/`, {
         headers: { Authorization: `Bearer ${token}` },
       })

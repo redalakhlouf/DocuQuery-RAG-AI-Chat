@@ -187,16 +187,13 @@ L'endpoint DELETE n'a jamais ete implemente. Le CORS autorise la methode DELETE 
 - `backend/app/services/document_service.py` — pas de fonction de suppression
 - Frontend — pas de bouton "Supprimer"
 
-### Solution
-**Backend :** Creer `DELETE /api/v1/documents/{document_id}` qui :
-1. Verifie que le document appartient a l'utilisateur
-2. Supprime les chunks associes (CASCADE en DB, mais aussi le fichier dans Storage)
-3. Supprime le document de la table `documents`
-4. Supprime le fichier du bucket `documents` dans Supabase Storage
+### Solution appliquee
+**Backend :** Nouvelle route `DELETE /api/v1/documents/{document_id}` dans `documents.py` + fonction `delete_document()` dans `document_service.py` qui supprime les chunks, le fichier Storage et le document de la table.
 
-**Frontend :** Ajouter un bouton "Supprimer" dans le dashboard a cote de chaque document, avec une confirmation.
+**Frontend :** Bouton "✕" a cote de chaque document dans le dashboard avec confirmation. Fonction `apiDelete()` ajoutee a `api.js`.
 
 ### Statut
+**RESOLU** (2026-07-22) — backend redeploye, frontend pousse.
 **A resoudre.**
 
 ---
@@ -256,5 +253,5 @@ Empeche l'appel API si la valeur est vide.
 | 3 | Domaine custom (CORS + DNS) | Moyen | Resolu |
 | 4 | Doublons d'upload | Moyen | Resolu |
 | 5 | Pas de limite 5 fichiers | Moyen | Resolu |
-| 6 | Pas de suppression de fichier | Moyen | A resoudre |
+| 6 | Pas de suppression de fichier | Moyen | Resolu |
 | 7 | Document ID vide envoye par le frontend | Moyen | Resolu |
