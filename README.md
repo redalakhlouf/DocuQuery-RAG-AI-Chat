@@ -31,11 +31,8 @@
 </p>
 
 <p align="center">
-  <a href="demo/docuquery.demo.mp4">
-    <img src="DocuQuery.png" alt="DocuQuery Demo — Click to watch" width="700">
-  </a>
+  <a href="demo/docuquery.demo.mp4"><img src="https://img.shields.io/badge/Watch_Demo-Video-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="Watch Demo Video"></a>
 </p>
-<p align="center"><em>👆 Click the image to watch the demo video</em></p>
 
 ---
 
