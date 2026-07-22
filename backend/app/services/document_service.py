@@ -275,8 +275,8 @@ def delete_document(user_id: str, document_id: str) -> bool:
     if not doc or doc["user_id"] != user_id:
         return False
 
-    # 1. Supprimer les chunks de la table document_chunks
-    supabase.table("document_chunks").delete().eq("document_id", document_id).execute()
+    # 1. Supprimer les chunks de la table chunks
+    supabase.table("chunks").delete().eq("document_id", document_id).execute()
 
     # 2. Supprimer le fichier du Storage
     if doc.get("storage_path"):
