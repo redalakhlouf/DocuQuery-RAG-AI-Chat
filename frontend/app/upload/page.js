@@ -6,12 +6,9 @@ import DropZone from "@/app/components/DropZone";
 import Badge from "@/app/components/Badge";
 import Skeleton from "@/app/components/Skeleton";
 import { useError } from "@/app/contexts/ErrorContext";
-import { getToken } from "@/app/utils/api";
+import { getToken, API_BASE, apiGet } from "@/app/utils/api";
 import { useCallback, useState, useEffect } from "react";
 import { setGridSpeed, boostGrid } from "@/app/components/GridBackground";
-
-const _raw = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-const API_BASE = _raw.replace(/^http:\/\//, "https://");
 
 export default function UploadPage() {
   const { user, loading } = useUser("/login");
@@ -39,15 +36,9 @@ export default function UploadPage() {
   // Fetch document count to enforce 5-file limit
   useEffect(() => {
     if (!user) return;
-    getToken().then((token) => {
-      if (!token) return;
-      fetch(`${API_BASE}/api/v1/documents/`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-        .then((r) => r.json())
-        .then((data) => setDocCount((data.documents || []).length))
-        .catch(() => {});
-    });
+    apiGet("/api/v1/documents/")
+      .then((data) => setDocCount((data.documents || []).length))
+      .catch(() => {});
   }, [user]);
 
   const handleFileSelect = useCallback((file) => {
@@ -145,7 +136,7 @@ export default function UploadPage() {
 
         {limitReached && !uploading && (
           <div className="mt-4 p-3 rounded bg-dq-error/10 border border-dq-error/30 text-sm text-dq-error">
-            Limite atteinte : maximum 5 documents par compte. Supprimez un document existant avant d'en ajouter un nouveau.
+            Limite atteinte : maximum 5 documents par compte. Supprimez un document existant avant d&apos;en ajouter un nouveau.
           </div>
         )}
 

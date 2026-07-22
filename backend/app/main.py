@@ -48,10 +48,15 @@ app.add_middleware(SecurityHeadersMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.allowed_origins_list,
+    allow_origins=[
+        "http://localhost:3000",
+        "https://docuquery-mu.vercel.app",
+        "https://docuquery.dev",
+        "https://www.docuquery.dev",
+    ],
     allow_credentials=True,
-    allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type", "Accept", "Content-Language"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 app.include_router(documents_router)
