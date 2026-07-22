@@ -271,7 +271,7 @@ def count_user_documents(user_id: str) -> int:
 
 
 def delete_document(user_id: str, document_id: str) -> bool:
-    doc = get_document_by_id(document_id)
+    doc = get_document_by_id(document_id, user_id)
     if not doc or doc["user_id"] != user_id:
         return False
 
