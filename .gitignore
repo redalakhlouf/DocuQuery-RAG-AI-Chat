@@ -1,12 +1,13 @@
-# Secrets
+# Secrets & credentials
 .env
 .env.local
+.env.production
 *.env
 token_temp.txt
 *.token.txt
-.claude/
-.opencode/
-opencode.json
+
+# Internal docs (secrets, notes, audits)
+ENV_VARS_DEPLOY.md
 NOTES_A_REVOIR.md
 NOTES_A_REVOIR_V2.md
 NOTES_A_REVOIR_V3.md
@@ -16,6 +17,15 @@ RAG_SAAS_ROADMAP.md
 SKILL-DESIGN.md
 DESIGN_LOG.md
 FRONTEND_MASTERY_GUIDE.md
+ISSUES.md
+AUDIT.md
+DESIGN_AUDIT.md
+
+# Dev tools
+.claude/
+.opencode/
+opencode.json
+cleanup_archive/
 
 # Python
 __pycache__/
